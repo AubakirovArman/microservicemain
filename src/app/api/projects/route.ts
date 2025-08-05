@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
     }
 
-    const { name, geminiApiKey } = await request.json();
+    const { name, geminiApiKey, geminiModel, temperature } = await request.json();
 
     if (!name || !geminiApiKey) {
       return NextResponse.json({ error: 'Имя проекта и API ключ обязательны' }, { status: 400 });
@@ -52,6 +52,8 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         geminiApiKey,
+        geminiModel: geminiModel || 'gemini-2.5-flash',
+        temperature: temperature !== undefined ? temperature : 0.7,
         userId: session.user.id
       },
       include: {

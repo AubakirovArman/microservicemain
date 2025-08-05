@@ -100,11 +100,11 @@ export async function POST(request: NextRequest) {
     // Извлекаем текст ответа из структуры Gemini API
     const responseText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || 'Нет ответа';
 
-    return NextResponse.json({
-      success: true,
-      response: responseText,
-      projectId,
-      promptId
+    return new NextResponse(responseText, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8'
+      }
     });
 
   } catch (error) {

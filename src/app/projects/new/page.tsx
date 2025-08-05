@@ -10,7 +10,9 @@ export default function NewProject() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
-    geminiApiKey: ''
+    geminiApiKey: '',
+    geminiModel: 'gemini-2.5-flash',
+    temperature: 0.7
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -50,12 +52,18 @@ export default function NewProject() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const value = e.target.type === 'number' ? parseFloat(e.target.value) : e.target.value;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: value
     });
   };
+
+  const geminiModels = [
+    { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+    { value: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash Lite' }
+  ];
 
   if (status === 'loading') {
     return <div className="flex justify-center items-center min-h-screen">Загрузка...</div>;
@@ -127,6 +135,47 @@ export default function NewProject() {
                   Google AI Studio
                 </a>
               </p>
+            </div>
+
+            <div>
+              <label htmlFor="geminiModel" className="block text-sm font-medium text-gray-700 mb-2">
+                Модель Gemini
+              </label>
+              <select
+                id="geminiModel"
+                name="geminiModel"
+                value={formData.geminiModel}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {geminiModels.map((model) => (
+                  <option key={model.value} value={model.value}>
+                    {model.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="temperature" className="block text-sm font-medium text-gray-700 mb-2">
+                Температура ({formData.temperature})
+              </label>
+              <input
+                type="range"
+                id="temperature"
+                name="temperature"
+                min="0"
+                max="2"
+                step="0.1"
+                value={formData.temperature}
+                onChange={handleChange}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>0 (Детерминированный)</span>
+                <span>1 (Сбалансированный)</span>
+                <span>2 (Креативный)</span>
+              </div>
             </div>
 
             <div className="flex gap-4">
