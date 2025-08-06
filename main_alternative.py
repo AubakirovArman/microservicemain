@@ -24,7 +24,7 @@ tfidf_vectorizer = None
 phrases_list = None
 phrases_tfidf_matrix = None
 
-# База фраз автоответчиков (сокращенная для быстрой демонстрации)
+# База фраз автоответчиков (полная база из оригинального файла)
 phrases_db: Set[str] = {
 "Здравствуйте это сбербанк я ваш виртуальный ассистент афина чем я могу помочь",
 "Буквально секундочку не совсем понимаю вас",
@@ -2501,6 +2501,7 @@ phrases_db: Set[str] = {
 "Не совсем понял предпосылку",
 "Какие следующие шаги стоит предпринять"
 
+
 }
 
 class TextPreprocessor:
@@ -2594,35 +2595,91 @@ class SimilarityCalculator:
         return combined_score
 
 def initialize_system():
-    """Инициализация TF-IDF векторизатора и предварительное вычисление матрицы"""
-    global tfidf_vectorizer, phrases_list, phrases_tfidf_matrix, phrases_db
+    """Инициализация системы анализа текста"""
+    global tfidf_vectorizer, phrases_list, phrases_tfidf_matrix
     
-    logger.info("Инициализация TF-IDF векторизатора...")
+    logger.info("Инициализация системы анализа текста...")
     start_time = time.time()
     
     try:
         # Конвертируем set в list для индексации
         phrases_list = list(phrases_db)
         
-        # Инициализируем TF-IDF векторизатор
+        # Предобрабатываем фразы
+        cleaned_phrases = [TextPreprocessor.clean_text(phrase) for phrase in phrases_list]
+        
+        # Создаем TF-IDF векторизатор
         tfidf_vectorizer = TfidfVectorizer(
-            lowercase=True,
-            stop_words=None,
-            ngram_range=(1, 3),
-            max_features=10000
+            analyzer='word',
+            ngram_range=(1, 3),  # Используем униграммы, биграммы и триграммы
+            max_features=10000,
+            stop_words=None  # Не используем стоп-слова для русского языка
         )
         
-        logger.info(f"Вычисление TF-IDF матрицы для {len(phrases_list)} фраз...")
-        # Предварительно вычисляем TF-IDF матрицу для всех фраз
-        phrases_tfidf_matrix = tfidf_vectorizer.fit_transform(phrases_list)
+        # Вычисляем TF-IDF матрицу для всех фраз
+        phrases_tfidf_matrix = tfidf_vectorizer.fit_transform(cleaned_phrases)
         
         load_time = time.time() - start_time
         logger.info(f"Инициализация завершена за {load_time:.2f} секунд")
+        logger.info(f"Загружено {len(phrases_list)} фраз автоответчиков")
         
     except Exception as e:
         logger.error(f"Ошибка при инициализации: {e}")
         raise
 
+def find_most_similar(query_text: str, threshold: float = 0.5) -> Tuple[bool, float, str]:
+    """Поиск наиболее похожей фразы с использованием гибридного подхода"""
+    if not phrases_list:
+        return False, 0.0, ""
+    
+    try:
+        max_similarity = 0.0
+        best_match = ""
+        
+        # Сначала пробуем TF-IDF для быстрого поиска
+        if tfidf_vectorizer is not None and phrases_tfidf_matrix is not None:
+            cleaned_query = TextPreprocessor.clean_text(query_text)
+            
+            if cleaned_query.strip():  # Проверяем, что запрос не пустой после очистки
+                query_tfidf = tfidf_vectorizer.transform([cleaned_query])
+                similarities = cosine_similarity(query_tfidf, phrases_tfidf_matrix)[0]
+                
+                max_tfidf_idx = np.argmax(similarities)
+                max_tfidf_similarity = similarities[max_tfidf_idx]
+                
+                if max_tfidf_similarity > 0.1:  # Если TF-IDF показал хоть какое-то сходство
+                    # Используем комбинированный подход для уточнения
+                    candidate_phrase = phrases_list[max_tfidf_idx]
+                    combined_similarity = SimilarityCalculator.length_weighted_similarity(query_text, candidate_phrase)
+                    
+                    # Берем максимум из TF-IDF и комбинированного подхода
+                    final_similarity = max(max_tfidf_similarity, combined_similarity)
+                    
+                    if final_similarity >= threshold:
+                        return True, final_similarity, candidate_phrase
+                    else:
+                        max_similarity = final_similarity
+                        best_match = candidate_phrase
+        
+        # Если TF-IDF не дал результата, используем только комбинированный подход
+        if max_similarity < threshold:
+            for phrase in phrases_list:
+                similarity = SimilarityCalculator.length_weighted_similarity(query_text, phrase)
+                
+                if similarity > max_similarity:
+                    max_similarity = similarity
+                    best_match = phrase
+        
+        if max_similarity >= threshold:
+            return True, max_similarity, best_match
+        else:
+            return False, max_similarity, ""
+            
+    except Exception as e:
+        logger.error(f"Ошибка при поиске схожести: {e}")
+        return False, 0.0, ""
+
+# Инициализация FastAPI
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
@@ -2632,12 +2689,17 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("Завершение работы приложения...")
 
-app = FastAPI(title="Phrase Checker with Embeddings", version="2.0.0", lifespan=lifespan)
+app = FastAPI(
+    title="Phrase Checker with Alternative Methods",
+    description="API для проверки фраз автоответчиков без использования нейронных сетей",
+    version="2.0.0",
+    lifespan=lifespan
+)
 
-# Модели для API
+# Модели данных
 class TextRequest(BaseModel):
     text: str
-    threshold: float = 0.9  # Порог схожести (0.0 - 1.0)
+    threshold: float = 0.5  # Снижен порог по умолчанию
 
 class CheckResponse(BaseModel):
     exists: bool
@@ -2647,129 +2709,85 @@ class CheckResponse(BaseModel):
 
 class SimilarPhrasesResponse(BaseModel):
     similar_phrases: List[Tuple[str, float]]
+
+class SimilarPhrasesRequest(BaseModel):
     query_text: str
-
-def find_most_similar(query_text: str, threshold: float = 0.9) -> Tuple[bool, float, str]:
-    """Находит наиболее похожую фразу используя гибридный подход"""
-    if tfidf_vectorizer is None or phrases_tfidf_matrix is None:
-        raise HTTPException(status_code=500, detail="Система не инициализирована")
-    
-    # Предобработка запроса
-    cleaned_query = TextPreprocessor.clean_text(query_text)
-    
-    # TF-IDF поиск для первичной фильтрации
-    query_tfidf = tfidf_vectorizer.transform([cleaned_query])
-    tfidf_similarities = cosine_similarity(query_tfidf, phrases_tfidf_matrix)[0]
-    
-    # Получаем топ-10 кандидатов по TF-IDF
-    top_indices = np.argsort(tfidf_similarities)[::-1][:10]
-    
-    best_similarity = 0.0
-    best_phrase = ""
-    
-    # Уточняем с помощью комбинированного сходства
-    for idx in top_indices:
-        phrase = phrases_list[idx]
-        combined_similarity = SimilarityCalculator.length_weighted_similarity(cleaned_query, phrase)
-        
-        if combined_similarity > best_similarity:
-            best_similarity = combined_similarity
-            best_phrase = phrase
-    
-    # Проверяем порог
-    if best_similarity >= threshold:
-        return True, float(best_similarity), best_phrase
-    else:
-        return False, float(best_similarity), ""
-
-def find_top_similar(query_text: str, top_k: int = 5) -> List[Tuple[str, float]]:
-    """Находит топ-K наиболее похожих фраз используя гибридный подход"""
-    if tfidf_vectorizer is None or phrases_tfidf_matrix is None:
-        raise HTTPException(status_code=500, detail="Система не инициализирована")
-    
-    # Предобработка запроса
-    cleaned_query = TextPreprocessor.clean_text(query_text)
-    
-    # TF-IDF поиск для первичной фильтрации
-    query_tfidf = tfidf_vectorizer.transform([cleaned_query])
-    tfidf_similarities = cosine_similarity(query_tfidf, phrases_tfidf_matrix)[0]
-    
-    # Получаем топ-50 кандидатов по TF-IDF для более точного ранжирования
-    candidate_count = min(50, len(phrases_list))
-    top_indices = np.argsort(tfidf_similarities)[::-1][:candidate_count]
-    
-    # Вычисляем комбинированное сходство для кандидатов
-    results = []
-    for idx in top_indices:
-        phrase = phrases_list[idx]
-        combined_similarity = SimilarityCalculator.length_weighted_similarity(cleaned_query, phrase)
-        results.append((phrase, float(combined_similarity)))
-    
-    # Сортируем по комбинированному сходству и возвращаем топ-K
-    results.sort(key=lambda x: x[1], reverse=True)
-    return results[:top_k]
-
-@app.get("/", response_class=HTMLResponse)
-async def root():
-    """Главная страница с описанием сервиса"""
-    try:
-        with open("index.html", "r", encoding="utf-8") as f:
-            return f.read()
-    except FileNotFoundError:
-        return HTMLResponse(
-            content="<h1>Phrase Checker with Embeddings</h1><p>HTML страница не найдена</p>",
-            status_code=200
-        )
-
-@app.get("/api")
-async def api_info():
-    """API информация"""
-    return {
-        "message": "Phrase Checker with Embeddings is running",
-        "phrases_count": len(phrases_db),
-        "system_loaded": tfidf_vectorizer is not None,
-        "tfidf_cached": phrases_tfidf_matrix is not None
-    }
-
-@app.post("/check", response_model=CheckResponse)
-async def check_phrase(request: TextRequest):
-    """Проверяет наличие похожей фразы с использованием embeddings"""
-    if not request.text:
-        raise HTTPException(status_code=400, detail="Текст не может быть пустым")
-    
-    start_time = time.time()
-    
-    # Поиск с использованием embeddings
-    exists, similarity, matched_phrase = find_most_similar(
-        request.text.strip(), 
-        request.threshold
-    )
-    
-    processing_time = time.time() - start_time
-    
-    return CheckResponse(
-        exists=exists,
-        message="есть" if exists else "нет",
-        similarity_score=similarity,
-        matched_phrase=matched_phrase
-    )
+    top_k: int = 5
+    threshold: float = 0.1
 
 class PhraseRequest(BaseModel):
     phrase: str
-    threshold: float = 0.9
+    threshold: float = 0.5  # Снижен порог по умолчанию
 
 class AnsweringMachineResponse(BaseModel):
     is_answering_machine: bool
     similarity_score: float = 0.0
     matched_phrase: str = ""
 
+# Эндпоинты
+@app.get("/")
+async def root():
+    """Главная страница"""
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Phrase Checker Alternative</title>
+        <meta charset="utf-8">
+    </head>
+    <body>
+        <h1>Phrase Checker with Alternative Methods</h1>
+        <p>API для проверки фраз автоответчиков без использования нейронных сетей</p>
+        <h2>Доступные эндпоинты:</h2>
+        <ul>
+            <li><a href="/docs">/docs</a> - Swagger документация</li>
+            <li><a href="/api">/api</a> - Информация об API</li>
+            <li>POST /check_phrase - Проверка фразы автоответчика</li>
+            <li>POST /check - Проверка существования фразы</li>
+            <li>POST /similar - Поиск похожих фраз</li>
+        </ul>
+        <h2>Статистика:</h2>
+        <p>Фраз в базе: """ + str(len(phrases_db)) + """</p>
+        <p>Система инициализирована: """ + str(phrases_list is not None) + """</p>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content)
+
+@app.get("/api")
+async def api_info():
+    """API информация"""
+    return {
+        "message": "Phrase Checker with Alternative Methods is running",
+        "phrases_count": len(phrases_db),
+        "system_loaded": phrases_list is not None,
+        "tfidf_initialized": tfidf_vectorizer is not None,
+        "version": "2.0.0",
+        "methods": ["TF-IDF", "Jaccard Similarity", "Sequence Matching", "Word Overlap", "Length Weighting"]
+    }
+
+@app.post("/check", response_model=CheckResponse)
+async def check_phrase_exists(request: TextRequest):
+    """Проверяет существование фразы в базе"""
+    try:
+        exists, similarity_score, matched_phrase = find_most_similar(request.text, request.threshold)
+        
+        message = "Фраза найдена" if exists else "Фраза не найдена"
+        
+        return CheckResponse(
+            exists=exists,
+            message=message,
+            similarity_score=similarity_score,
+            matched_phrase=matched_phrase
+        )
+    except Exception as e:
+        logger.error(f"Error checking phrase: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/check_phrase", response_model=AnsweringMachineResponse)
 async def check_phrase_for_answering_machine(request: PhraseRequest):
     """Проверяет, является ли фраза автоответчиком"""
     try:
-        if tfidf_vectorizer is None or phrases_tfidf_matrix is None:
-            raise HTTPException(status_code=500, detail="System not initialized")
-        
         exists, similarity_score, matched_phrase = find_most_similar(request.phrase, request.threshold)
         
         return AnsweringMachineResponse(
@@ -2782,27 +2800,30 @@ async def check_phrase_for_answering_machine(request: PhraseRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/similar", response_model=SimilarPhrasesResponse)
-async def get_similar_phrases(request: TextRequest):
-    """Возвращает топ-5 наиболее похожих фраз"""
-    if not request.text:
-        raise HTTPException(status_code=400, detail="Текст не может быть пустым")
-    
-    similar_phrases = find_top_similar(request.text.strip(), top_k=5)
-    
-    return SimilarPhrasesResponse(
-        similar_phrases=similar_phrases,
-        query_text=request.text
-    )
-
-@app.get("/health")
-async def health_check():
-    """Проверка здоровья сервиса"""
-    return {
-        "status": "healthy",
-        "phrases_loaded": len(phrases_db),
-        "system_ready": tfidf_vectorizer is not None,
-        "tfidf_ready": phrases_tfidf_matrix is not None
-    }
+async def find_similar_phrases(request: SimilarPhrasesRequest):
+    """Находит похожие фразы"""
+    try:
+        if not phrases_list:
+            return SimilarPhrasesResponse(similar_phrases=[])
+        
+        similarities = []
+        
+        for phrase in phrases_list:
+            similarity = SimilarityCalculator.length_weighted_similarity(request.query_text, phrase)
+            if similarity >= request.threshold:
+                similarities.append((phrase, similarity))
+        
+        # Сортируем по убыванию схожести
+        similarities.sort(key=lambda x: x[1], reverse=True)
+        
+        # Возвращаем топ-K результатов
+        top_similarities = similarities[:request.top_k]
+        
+        return SimilarPhrasesResponse(similar_phrases=top_similarities)
+        
+    except Exception as e:
+        logger.error(f"Error finding similar phrases: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8001)

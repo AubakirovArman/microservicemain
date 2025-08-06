@@ -21,7 +21,8 @@ export async function POST(request: NextRequest) {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            phrase: text
+            phrase: text,
+            threshold: 0.9
           })
         });
 
