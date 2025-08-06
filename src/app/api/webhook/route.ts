@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getCachedPrompt, cachePrompt } from '@/lib/redis';
+import { getCachedPrompt, cachePrompt, type CachedPromptData } from '@/lib/redis';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,14 +12,15 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Сначала пытаемся получить промпт из кеша Redis
-    let promptInstructions = await getCachedPrompt(projectId, promptId);
-    let geminiApiKey: string | null = null;
-    let geminiModel: string = 'gemini-2.5-flash'; // значение по умолчанию
-    let temperature: number = 0.7; // значение по умолчанию
+    // Сначала пытаемся получить данные из кеша Redis
+    let cachedData = await getCachedPrompt(projectId, promptId);
+    let promptInstructions: string;
+    let geminiApiKey: string;
+    let geminiModel: string;
+    let temperature: number;
 
-    if (!promptInstructions) {
-      // Если промпт не в кеше, получаем из базы данных
+    if (!cachedData) {
+      // Если данные не в кеше, получаем из базы данных
       const project = await prisma.project.findUnique({
         where: { id: projectId },
         include: {
@@ -43,24 +44,20 @@ export async function POST(request: NextRequest) {
       geminiModel = project.geminiModel || 'gemini-2.5-flash';
       temperature = project.temperature || 0.7;
 
-      // Кешируем промпт для будущих запросов
-      if (promptInstructions) {
-        await cachePrompt(projectId, promptId, promptInstructions);
-      }
+      // Кешируем все данные для будущих запросов
+      const dataToCache: CachedPromptData = {
+        instruction: promptInstructions,
+        geminiApiKey,
+        geminiModel,
+        temperature
+      };
+      await cachePrompt(projectId, promptId, dataToCache);
     } else {
-      // Если промпт был в кеше, нужно получить API ключ, модель и температуру отдельно
-      const project = await prisma.project.findUnique({
-        where: { id: projectId },
-        select: { geminiApiKey: true, geminiModel: true, temperature: true }
-      });
-
-      if (!project) {
-        return NextResponse.json({ error: 'Проект не найден' }, { status: 404 });
-      }
-
-      geminiApiKey = project.geminiApiKey;
-      geminiModel = project.geminiModel || 'gemini-2.5-flash';
-      temperature = project.temperature || 0.7;
+      // Используем данные из кеша
+      promptInstructions = cachedData.instruction;
+      geminiApiKey = cachedData.geminiApiKey;
+      geminiModel = cachedData.geminiModel;
+      temperature = cachedData.temperature;
     }
 
     if (!geminiApiKey) {

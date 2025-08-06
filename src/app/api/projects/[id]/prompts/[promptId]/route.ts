@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { cachePrompt, deleteCachedPrompt } from '@/lib/redis';
+import { cachePrompt, deleteCachedPrompt, invalidateAllCache, type CachedPromptData } from '@/lib/redis';
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string, promptId: string }> }) {
   try {
@@ -47,6 +47,11 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     // Удаляем из кеша Redis
     await deleteCachedPrompt(id, promptId);
+    
+    // Инвалидируем общий кэш, чтобы он обновился при следующем запросе
+    await invalidateAllCache();
+
+    console.log(`Промпт ${prompt.name} удален из кэша`);
 
     return NextResponse.json({ message: 'Промпт удален' });
   } catch (error) {
@@ -105,8 +110,20 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }
     });
 
-    // Обновляем кеш в Redis
-    await cachePrompt(id, promptId, instruction);
+    // Обновляем кеш в Redis с полными данными проекта
+    const promptData: CachedPromptData = {
+      instruction: updatedPrompt.instruction,
+      geminiApiKey: project.geminiApiKey,
+      geminiModel: project.geminiModel || 'gemini-2.5-flash',
+      temperature: project.temperature || 0.7
+    };
+    
+    await cachePrompt(id, promptId, promptData);
+    
+    // Инвалидируем общий кэш, чтобы он обновился при следующем запросе
+    await invalidateAllCache();
+
+    console.log(`Промпт ${updatedPrompt.name} обновлен и кэширован`);
 
     return NextResponse.json(updatedPrompt);
   } catch (error) {

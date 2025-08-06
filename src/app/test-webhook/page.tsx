@@ -32,12 +32,12 @@ export default function TestWebhookPage() {
         body: JSON.stringify({ projectId, promptId, text }),
       });
 
-      const data = await res.json();
-
       if (res.ok) {
-        setResponse(data.response);
+        const responseText = await res.text();
+        setResponse(responseText);
       } else {
-        setError(data.error || 'Ошибка при вызове webhook');
+        const errorData = await res.json();
+        setError(errorData.error || 'Ошибка при вызове webhook');
       }
     } catch (error) {
       setError('Ошибка сети');
@@ -63,12 +63,12 @@ export default function TestWebhookPage() {
         body: jsonInput,
       });
 
-      const data = await res.json();
-
       if (res.ok) {
-        setJsonResponse(data.response);
+        const responseText = await res.text();
+        setJsonResponse(responseText);
       } else {
-        setJsonError(data.error || 'Ошибка при вызове webhook');
+        const errorData = await res.json();
+        setJsonError(errorData.error || 'Ошибка при вызове webhook');
       }
     } catch (error) {
       if (error instanceof SyntaxError) {

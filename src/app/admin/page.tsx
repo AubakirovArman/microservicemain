@@ -3,6 +3,7 @@
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 
 interface User {
   id: string
@@ -158,6 +159,12 @@ export default function AdminPanel() {
               </h1>
             </div>
             <div className="flex items-center space-x-4">
+              <Link
+                href="/admin/cache"
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+              >
+                Управление кэшем
+              </Link>
               <span className="text-gray-700">
                 {session.user.name} (Админ)
               </span>

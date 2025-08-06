@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { cachePrompt, deleteCachedPrompt } from '@/lib/redis';
+import { cachePrompt, deleteCachedPrompt, invalidateAllCache, type CachedPromptData } from '@/lib/redis';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -39,8 +39,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       }
     });
 
-    // Кешируем промпт в Redis
-    await cachePrompt(id, prompt.id, prompt.instruction);
+    // Кэшируем промпт в Redis с полными данными проекта
+    const promptData: CachedPromptData = {
+      instruction: prompt.instruction,
+      geminiApiKey: project.geminiApiKey,
+      geminiModel: project.geminiModel || 'gemini-2.5-flash',
+      temperature: project.temperature || 0.7
+    };
+    
+    await cachePrompt(id, prompt.id, promptData);
+    
+    // Инвалидируем общий кэш, чтобы он обновился при следующем запросе
+    await invalidateAllCache();
+
+    console.log(`Промпт ${prompt.name} создан и кэширован для проекта ${project.name}`);
 
     return NextResponse.json(prompt, { status: 201 });
   } catch (error) {

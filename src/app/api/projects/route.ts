@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { cacheProject, invalidateAllCache, type CachedProjectData } from '@/lib/redis';
 
 export async function GET() {
   try {
@@ -64,6 +65,23 @@ export async function POST(request: NextRequest) {
         }
       }
     });
+
+    // Кэшируем новый проект в Redis
+    const projectData: CachedProjectData = {
+      id: project.id,
+      name: project.name,
+      geminiApiKey: project.geminiApiKey,
+      geminiModel: project.geminiModel || 'gemini-2.5-flash',
+      temperature: project.temperature || 0.7,
+      userId: project.userId
+    };
+    
+    await cacheProject(projectData);
+    
+    // Инвалидируем общий кэш, чтобы он обновился при следующем запросе
+    await invalidateAllCache();
+
+    console.log(`Проект ${project.name} создан и кэширован`);
 
     return NextResponse.json(project, { status: 201 });
   } catch (error) {

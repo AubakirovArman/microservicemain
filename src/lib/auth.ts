@@ -47,7 +47,18 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt'
   },
+  pages: {
+    signIn: '/auth/signin',
+  },
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // Если URL начинается с baseUrl, используем его
+      if (url.startsWith(baseUrl)) return url
+      // Если URL начинается с "/", добавляем baseUrl
+      else if (url.startsWith("/")) return `${baseUrl}${url}`
+      // В остальных случаях возвращаем baseUrl
+      return baseUrl
+    },
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role
@@ -61,8 +72,5 @@ export const authOptions: NextAuthOptions = {
       }
       return session
     }
-  },
-  pages: {
-    signIn: '/auth/signin',
   },
 }
