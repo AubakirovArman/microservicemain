@@ -28,12 +28,7 @@ export async function POST(request: NextRequest) {
         if (embeddingsResponse.ok) {
           const embeddingsData = await embeddingsResponse.json();
           if (embeddingsData.is_answering_machine) {
-            return new NextResponse('автоответчик', {
-              status: 200,
-              headers: {
-                'Content-Type': 'text/plain; charset=utf-8'
-              }
-            });
+            return NextResponse.json({ text: 'автоответчик' }, { status: 200 });
           }
         }
       } catch (embeddingsError) {
@@ -127,12 +122,7 @@ export async function POST(request: NextRequest) {
     // Извлекаем текст ответа из структуры Gemini API
     const responseText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || 'Нет ответа';
 
-    return new NextResponse(responseText, {
-      status: 200,
-      headers: {
-        'Content-Type': 'text/plain; charset=utf-8'
-      }
-    });
+    return NextResponse.json({ text: responseText }, { status: 200 });
 
   } catch (error) {
     console.error('Ошибка webhook:', error);
