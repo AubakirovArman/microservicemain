@@ -4,12 +4,42 @@ import { getCachedPrompt, cachePrompt, type CachedPromptData } from '@/lib/redis
 
 export async function POST(request: NextRequest) {
   try {
-    const { projectId, promptId, text } = await request.json();
+    const { projectId, promptId, text, check } = await request.json();
 
     if (!projectId || !promptId || !text) {
       return NextResponse.json({ 
         error: 'projectId, promptId и text обязательны' 
       }, { status: 400 });
+    }
+
+    // Если check=true, проверяем на автоответчик через main_embeddings.py
+    if (check === true) {
+      try {
+        const embeddingsResponse = await fetch('http://localhost:8001/check_phrase', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            phrase: text
+          })
+        });
+
+        if (embeddingsResponse.ok) {
+          const embeddingsData = await embeddingsResponse.json();
+          if (embeddingsData.is_answering_machine) {
+            return new NextResponse('автоответчик', {
+              status: 200,
+              headers: {
+                'Content-Type': 'text/plain; charset=utf-8'
+              }
+            });
+          }
+        }
+      } catch (embeddingsError) {
+        console.error('Ошибка при проверке автоответчика:', embeddingsError);
+        // Продолжаем выполнение стандартной процедуры, если проверка не удалась
+      }
     }
 
     // Сначала пытаемся получить данные из кеша Redis
