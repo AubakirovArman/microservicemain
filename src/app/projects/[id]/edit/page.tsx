@@ -43,7 +43,7 @@ export default function EditProjectPage() {
           setName(project.name);
           setGeminiApiKey(project.geminiApiKey);
           setGeminiModel(project.geminiModel || 'gemini-2.5-flash');
-          setTemperature(project.temperature || 0.7);
+          setTemperature(project.temperature ?? 0.7);
         } else {
           setError('Ошибка загрузки проекта');
         }

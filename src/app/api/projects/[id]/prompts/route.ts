@@ -44,7 +44,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       instruction: prompt.instruction,
       geminiApiKey: project.geminiApiKey,
       geminiModel: project.geminiModel || 'gemini-2.5-flash',
-      temperature: project.temperature || 0.7
+      temperature: project.temperature ?? 0.7
     };
     
     await cachePrompt(id, prompt.id, promptData);

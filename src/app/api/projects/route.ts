@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       name: project.name,
       geminiApiKey: project.geminiApiKey,
       geminiModel: project.geminiModel || 'gemini-2.5-flash',
-      temperature: project.temperature || 0.7,
+      temperature: project.temperature ?? 0.7,
       userId: project.userId
     };
     

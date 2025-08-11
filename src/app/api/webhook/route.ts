@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       promptInstructions = prompt.instruction;
       geminiApiKey = project.geminiApiKey;
       geminiModel = project.geminiModel || 'gemini-2.5-flash';
-      temperature = project.temperature || 0.7;
+      temperature = project.temperature ?? 0.7;
 
       // Кешируем все данные для будущих запросов
       const dataToCache: CachedPromptData = {

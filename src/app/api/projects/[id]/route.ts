@@ -141,7 +141,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       name: updatedProject.name,
       geminiApiKey: updatedProject.geminiApiKey,
       geminiModel: updatedProject.geminiModel || 'gemini-2.5-flash',
-      temperature: updatedProject.temperature || 0.7,
+      temperature: updatedProject.temperature ?? 0.7,
       userId: updatedProject.userId
     };
     
@@ -153,7 +153,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         instruction: prompt.instruction,
         geminiApiKey: updatedProject.geminiApiKey,
         geminiModel: updatedProject.geminiModel || 'gemini-2.5-flash',
-        temperature: updatedProject.temperature || 0.7
+        temperature: updatedProject.temperature ?? 0.7
       };
       
       await cachePrompt(updatedProject.id, prompt.id, promptData);

@@ -54,7 +54,7 @@ async function performInitialization(): Promise<void> {
         name: project.name,
         geminiApiKey: project.geminiApiKey,
         geminiModel: project.geminiModel || 'gemini-2.5-flash',
-        temperature: project.temperature || 0.7,
+        temperature: project.temperature ?? 0.7,
         userId: project.userId
       };
       
@@ -70,7 +70,7 @@ async function performInitialization(): Promise<void> {
             instruction: prompt.instruction,
             geminiApiKey: project.geminiApiKey,
             geminiModel: project.geminiModel || 'gemini-2.5-flash',
-            temperature: project.temperature || 0.7
+            temperature: project.temperature ?? 0.7
           };
           
           cachedPrompts[project.id][prompt.id] = promptData;
