@@ -6,6 +6,7 @@ export default function TestWebhookPage() {
   const [projectId, setProjectId] = useState('');
   const [promptId, setPromptId] = useState('');
   const [text, setText] = useState('');
+  const [chatId, setChatId] = useState('');
   const [response, setResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -29,12 +30,12 @@ export default function TestWebhookPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ projectId, promptId, text }),
+        body: JSON.stringify({ projectId, promptId, text, ...(chatId ? { chatId } : {}) }),
       });
 
       if (res.ok) {
-        const responseText = await res.text();
-        setResponse(responseText);
+        const data = await res.json();
+        setResponse(JSON.stringify(data, null, 2));
       } else {
         const errorData = await res.json();
         setError(errorData.error || 'Ошибка при вызове webhook');
@@ -64,8 +65,8 @@ export default function TestWebhookPage() {
       });
 
       if (res.ok) {
-        const responseText = await res.text();
-        setJsonResponse(responseText);
+        const data = await res.json();
+        setJsonResponse(JSON.stringify(data, null, 2));
       } else {
         const errorData = await res.json();
         setJsonError(errorData.error || 'Ошибка при вызове webhook');
@@ -186,6 +187,24 @@ export default function TestWebhookPage() {
               </div>
 
               <div>
+                <label htmlFor="chatId" className="block text-sm font-medium text-gray-700">
+                  Chat ID (необязательно)
+                </label>
+                <div className="mt-1">
+                  <input
+                    id="chatId"
+                    name="chatId"
+                    type="text"
+                    value={chatId}
+                    onChange={(e) => setChatId(e.target.value)}
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
+                    placeholder="Телефон/логин клиента или внутренний chatId"
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Если указать телефон/логин, чат будет найден/создан автоматически.</p>
+              </div>
+
+              <div>
                 <button
                   type="submit"
                   disabled={isLoading}
@@ -215,7 +234,7 @@ export default function TestWebhookPage() {
                       value={jsonInput}
                       onChange={(e) => setJsonInput(e.target.value)}
                       className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
-                      placeholder={`{\n  "projectId": "your-project-id",\n  "promptId": "your-prompt-id",\n  "text": "your text here"\n}`}
+                      placeholder={`{\n  "projectId": "your-project-id",\n  "promptId": "your-prompt-id",\n  "text": "your text here",\n  "chatId": "+7701... (опционально)"\n}`}
                     />
                   </div>
                 </div>

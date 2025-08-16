@@ -4,9 +4,9 @@ import { getCachedPrompt, cachePrompt, type CachedPromptData } from '@/lib/redis
 
 export async function POST(request: NextRequest) {
   try {
-    const { projectId, promptId, text, check } = await request.json();
+  const { projectId, promptId, text, check, chatId, externalKey } = await request.json();
 
-    if (!projectId || !promptId || !text) {
+  if (!projectId || !promptId || !text) {
       return NextResponse.json({ 
         error: 'projectId, promptId и text обязательны' 
       }, { status: 400 });
@@ -92,23 +92,91 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Вызываем Gemini API
-    const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: `${promptInstructions}\n\nТекст для обработки: ${text}`
-          }]
-        }],
-        generationConfig: {
-          temperature: temperature
+    // Определение чата:
+    // 1) Если нет chatId, но есть externalKey — находим/создаём по externalKey.
+    // 2) Если есть chatId — пробуем найти по id; если не нашли, трактуем chatId как externalKey и находим/создаём.
+    let effectiveChatId = chatId as string | undefined;
+    if (!effectiveChatId && externalKey) {
+      const existing = await (prisma as any).chat.findFirst({ where: { projectId: projectId, externalKey } });
+      if (existing) {
+        effectiveChatId = existing.id as string;
+      } else {
+        const created = await (prisma as any).chat.create({ data: { projectId: projectId, externalKey, name: externalKey } });
+        effectiveChatId = created.id as string;
+      }
+    } else if (effectiveChatId) {
+      const byId = await (prisma as any).chat.findFirst({ where: { id: effectiveChatId, projectId } });
+      if (!byId) {
+        const aliasKey = effectiveChatId;
+        const existingByKey = await (prisma as any).chat.findFirst({ where: { projectId: projectId, externalKey: aliasKey } });
+        if (existingByKey) {
+          effectiveChatId = existingByKey.id as string;
+        } else {
+          const created = await (prisma as any).chat.create({ data: { projectId: projectId, externalKey: aliasKey, name: aliasKey } });
+          effectiveChatId = created.id as string;
         }
-      })
-    });
+      }
+    }
+
+  // Поддержка двух режимов: без chatId (старое поведение) и с chatId/ externalKey (диалог с контекстом)
+    let geminiResponse: Response;
+  if (!effectiveChatId) {
+      // старый режим
+      geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `${promptInstructions}\n\nТекст для обработки: ${text}` }] }],
+          generationConfig: { temperature }
+        })
+      });
+    } else {
+      // режим чата: подтягиваем историю сообщений
+      let chat = await (prisma as any).chat.findFirst({ where: { id: effectiveChatId, projectId } });
+      if (!chat) {
+        // Фолбэк: если chatId не найден — считаем, что прислали внешний ключ (телефон/логин)
+        const ek = effectiveChatId;
+        const foundByEk = await (prisma as any).chat.findFirst({ where: { projectId, externalKey: ek } });
+        if (foundByEk) {
+          chat = foundByEk;
+          effectiveChatId = foundByEk.id;
+        } else {
+          const created = await (prisma as any).chat.create({ data: { projectId, externalKey: ek, name: ek } });
+          chat = created;
+          effectiveChatId = created.id;
+        }
+      }
+      const messages = await (prisma as any).message.findMany({ where: { chatId: effectiveChatId }, orderBy: { createdAt: 'asc' }, take: 200 });
+
+      // формируем контент: сначала инструкции и стиль, затем история, затем новый текст
+      const systemParts: string[] = [];
+      if (promptInstructions) systemParts.push(`Инструкции промпта: ${promptInstructions}`);
+      if (chat.style) systemParts.push(`Стиль общения ассистента: ${chat.style}. Придерживайся этого стиля.`);
+      const systemText = systemParts.join('\n');
+
+      const contents: any[] = [];
+      if (systemText) contents.push({ role: 'user', parts: [{ text: systemText }] });
+      // Примерный бюджет на историю: 12000 символов
+      let total = systemText.length;
+      for (let i = messages.length - 1; i >= 0; i--) {
+        const m = messages[i];
+        const piece = { role: m.role === 'ASSISTANT' ? 'model' : 'user', parts: [{ text: m.content }] } as any;
+        const len = m.content.length + 10;
+        if (total + len > 12000) break;
+        contents.unshift(piece);
+        total += len;
+      }
+  contents.push({ role: 'user', parts: [{ text }] });
+
+      // сохраняем входящее сообщение пользователя
+  await (prisma as any).message.create({ data: { chatId: effectiveChatId, role: 'USER', content: text } });
+
+      geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ contents, generationConfig: { temperature } })
+      });
+    }
 
     if (!geminiResponse.ok) {
       const errorData = await geminiResponse.text();
@@ -119,11 +187,14 @@ export async function POST(request: NextRequest) {
     }
 
     const geminiData = await geminiResponse.json();
-    
-    // Извлекаем текст ответа из структуры Gemini API
     const responseText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || 'Нет ответа';
 
-    return NextResponse.json({ text: responseText }, { status: 200 });
+    // если чатовый режим — сохраняем ответ ассистента
+    if (effectiveChatId) {
+      await (prisma as any).message.create({ data: { chatId: effectiveChatId, role: 'ASSISTANT', content: responseText } });
+      await (prisma as any).chat.update({ where: { id: effectiveChatId }, data: { updatedAt: new Date() } });
+    }
+    return NextResponse.json({ text: responseText, chatId: effectiveChatId }, { status: 200 });
 
   } catch (error) {
     console.error('Ошибка webhook:', error);

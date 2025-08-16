@@ -34,6 +34,7 @@ export default function ProjectDetail() {
   const [showJsonModal, setShowJsonModal] = useState(false);
   const [selectedPrompt, setSelectedPrompt] = useState<Prompt | null>(null);
   const [jsonText, setJsonText] = useState('');
+  const [jsonChatId, setJsonChatId] = useState('');
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -118,6 +119,7 @@ export default function ProjectDetail() {
   const handleShowJson = (prompt: Prompt) => {
     setSelectedPrompt(prompt);
     setJsonText('');
+  setJsonChatId('');
     setShowJsonModal(true);
   };
 
@@ -314,6 +316,20 @@ export default function ProjectDetail() {
                 rows={4}
               />
             </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                ID чата (chatId)
+              </label>
+              <input
+                type="text"
+                value={jsonChatId}
+                onChange={(e) => setJsonChatId(e.target.value)}
+                placeholder="Можно указать телефон/логин клиента или внутренний chatId"
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Если это телефон/логин и чата ещё нет — он будет создан автоматически.</p>
+            </div>
             
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -323,7 +339,8 @@ export default function ProjectDetail() {
 {JSON.stringify({
   promptId: selectedPrompt.id,
   projectId: projectId,
-  text: jsonText || "Ваш текст здесь"
+  text: jsonText || "Ваш текст здесь",
+  ...(jsonChatId ? { chatId: jsonChatId } : {})
 }, null, 2)}
               </pre>
             </div>
@@ -334,7 +351,8 @@ export default function ProjectDetail() {
                   const jsonData = {
                     promptId: selectedPrompt.id,
                     projectId: projectId,
-                    text: jsonText || "Ваш текст здесь"
+                    text: jsonText || "Ваш текст здесь",
+                    ...(jsonChatId ? { chatId: jsonChatId } : {})
                   };
                   navigator.clipboard.writeText(JSON.stringify(jsonData, null, 2));
                   alert('JSON скопирован в буфер обмена!');

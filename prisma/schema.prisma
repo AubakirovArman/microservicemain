@@ -27,9 +27,11 @@ model Project {
   geminiApiKey String
   geminiModel String   @default("gemini-2.5-flash")
   temperature Float    @default(0.7)
+  type        ProjectType @default(SINGLE)
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   prompts     Prompt[]
+  chats       Chat[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -47,4 +49,43 @@ model Prompt {
 enum Role {
   ADMIN
   USER
+}
+
+enum ProjectType {
+  SINGLE   // одноразовые промпты (текущее поведение)
+  CHAT     // проекты с историей переписки
+}
+
+model Chat {
+  id            String   @id @default(cuid())
+  name          String?
+  style         String?  @db.Text // стиль/персона чата (шутливый, секретничает и т.п.)
+  summary       String?  @db.Text // сжатая сводка истории для экономии контекста
+  lastClearedAt DateTime? // отметка последней очистки (для ежедневного сброса)
+  externalKey   String?   // внешний идентификатор (телефон/логин) для авто-сопоставления чата
+  projectId     String
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  messages      Message[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([projectId, externalKey])
+  @@index([projectId])
+}
+
+model Message {
+  id        String      @id @default(cuid())
+  chatId    String
+  chat      Chat        @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  role      MessageRole
+  content   String      @db.Text
+  createdAt DateTime    @default(now())
+
+  @@index([chatId])
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
 }

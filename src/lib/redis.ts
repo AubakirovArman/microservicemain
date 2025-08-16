@@ -29,6 +29,7 @@ interface CachedProjectData {
   geminiModel: string;
   temperature: number;
   userId: string;
+  type?: 'SINGLE' | 'CHAT';
 }
 
 interface CachedAllData {

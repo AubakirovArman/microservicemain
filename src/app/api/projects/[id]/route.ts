@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { cacheProject, cachePrompt, deleteCachedProject, invalidateAllCache, type CachedProjectData, type CachedPromptData } from '@/lib/redis';
+import { cacheProject, cachePrompt, deleteCachedProject, deleteCachedPrompt, invalidateAllCache, type CachedProjectData, type CachedPromptData } from '@/lib/redis';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -99,7 +99,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const { id } = await params;
-    const { name, geminiApiKey, geminiModel, temperature } = await request.json();
+  const { name, geminiApiKey, geminiModel, temperature, type } = await request.json();
 
     if (!name) {
       return NextResponse.json({ error: 'Имя проекта обязательно' }, { status: 400 });
@@ -124,7 +124,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         name,
         ...(geminiApiKey && { geminiApiKey }),
         ...(geminiModel && { geminiModel }),
-        ...(temperature !== undefined && { temperature })
+  ...(temperature !== undefined && { temperature }),
+  ...(type && { type })
       },
       include: {
         prompts: {
@@ -142,7 +143,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       geminiApiKey: updatedProject.geminiApiKey,
       geminiModel: updatedProject.geminiModel || 'gemini-2.5-flash',
       temperature: updatedProject.temperature ?? 0.7,
-      userId: updatedProject.userId
+  userId: updatedProject.userId,
+  type: (updatedProject as any).type || 'SINGLE'
     };
     
     await cacheProject(projectData);
