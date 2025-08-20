@@ -18,3 +18,30 @@ export function systemPrompt(instruction?: string, style?: string) {
   if (style) parts.push(`Стиль общения ассистента: ${style}. Придерживайся этого стиля.`);
   return parts.join('\n');
 }
+
+// Detects if the user's message likely indicates the end of conversation (farewell/closing intent)
+export function detectEndOfConversation(input: string): boolean {
+  if (!input) return false;
+  const s = String(input).toLowerCase();
+  const patterns: RegExp[] = [
+    /\bпока\b/i,
+    /\bдо\s*свидан/i,
+    /\bдо\s*встреч/i,
+    /\bувидим/i,
+    /\bвс[её]\s*[,!\.?\s]*пока/i,
+    /\bспасибо[,!\.?\s]*\s*пока/i,
+    /\bна\s+этом\s+вс[её]/i,
+    /\bзаканчива(ем|ю)/i,
+    /\bзаверша(ем|ю)/i,
+    /\bвсего\s+добр/i,
+    /\bвсего\s+хорош/i,
+    /\bпрощай\b/i,
+    /\boй\s*вс[её]\b/i,
+    /\b(вешаю|кладу|положу)\s+трубк/i,
+    /\bgoodbye\b/i,
+    /\bbye\b/i,
+    /\bsee\s+you\b/i,
+    /\bttyl\b/i,
+  ];
+  return patterns.some((r) => r.test(s));
+}

@@ -35,6 +35,7 @@ export default function ProjectDetail() {
   const [selectedPrompt, setSelectedPrompt] = useState<Prompt | null>(null);
   const [jsonText, setJsonText] = useState('');
   const [jsonChatId, setJsonChatId] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -123,6 +124,27 @@ export default function ProjectDetail() {
     setShowJsonModal(true);
   };
 
+  const handleDeleteProject = async () => {
+    if (!confirm('Вы уверены, что хотите удалить проект? Это действие необратимо.')) return;
+    setDeleting(true);
+    setError('');
+    try {
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        router.push('/dashboard');
+      } else {
+        const data = await response.json().catch(() => ({} as any));
+        setError((data as any).error || 'Ошибка удаления проекта');
+      }
+    } catch (e) {
+      setError('Ошибка сети');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (status === 'loading' || loading) {
     return <div className="flex justify-center items-center min-h-screen">Загрузка...</div>;
   }
@@ -167,15 +189,25 @@ export default function ProjectDetail() {
             <div className="flex gap-2">
               <button
                 onClick={() => router.push(`/projects/${projectId}/edit`)}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
+                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md disabled:opacity-50"
+                disabled={deleting}
               >
                 Редактировать проект
               </button>
               <button
                 onClick={() => setShowNewPromptForm(true)}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
+                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md disabled:opacity-50"
+                disabled={deleting}
               >
                 Создать промпт
+              </button>
+              <button
+                onClick={handleDeleteProject}
+                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md disabled:opacity-50"
+                disabled={deleting}
+                title="Удалить проект"
+              >
+                {deleting ? 'Удаление...' : 'Удалить проект'}
               </button>
             </div>
           </div>

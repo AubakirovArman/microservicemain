@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
         if (embeddingsResponse.ok) {
           const embeddingsData = await embeddingsResponse.json();
           if (embeddingsData.is_answering_machine) {
-            return NextResponse.json({ text: 'автоответчик' }, { status: 200 });
+            return NextResponse.json({ text: 'автоответчик', endtalk: true }, { status: 200 });
           }
         }
       } catch (embeddingsError) {
@@ -118,16 +118,39 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Объявление инструмента-функции для завершения разговора (доступно для любого промпта)
+    const tools = [
+      {
+        functionDeclarations: [
+          {
+            name: 'endTalk',
+            description: 'Вызови эту функцию, когда разговор завершается (пользователь прощается/говорит, что это всё). Передай короткое финальное сообщение в поле text.',
+            parameters: {
+              type: 'OBJECT',
+              properties: {
+                text: { type: 'STRING', description: 'Короткое финальное прощальное сообщение пользователю.' }
+              },
+              required: ['text']
+            }
+          }
+        ]
+      }
+    ] as any;
+
   // Поддержка двух режимов: без chatId (старое поведение) и с chatId/ externalKey (диалог с контекстом)
     let geminiResponse: Response;
-  if (!effectiveChatId) {
+    // endtalk теперь определяется только вызовом функции endTalk со стороны модели
+    const initialEndtalk = false;
+    if (!effectiveChatId) {
       // старый режим
+      const toolInstruction = 'Если пользователь завершает разговор, вместо обычного ответа вызови функцию endTalk с полем text — твоё короткое прощальное сообщение. В остальных случаях НЕ вызывай функцию.';
       geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: `${promptInstructions}\n\nТекст для обработки: ${text}` }] }],
-          generationConfig: { temperature }
+          contents: [{ parts: [{ text: `${promptInstructions}\n\n${toolInstruction}\n\nТекст для обработки: ${text}` }] }],
+          generationConfig: { temperature },
+          tools
         })
       });
     } else {
@@ -152,6 +175,8 @@ export async function POST(request: NextRequest) {
       const systemParts: string[] = [];
       if (promptInstructions) systemParts.push(`Инструкции промпта: ${promptInstructions}`);
       if (chat.style) systemParts.push(`Стиль общения ассистента: ${chat.style}. Придерживайся этого стиля.`);
+      // Добавляем инструкцию по вызову функции завершения
+      systemParts.push('Если пользователь завершает разговор, вместо обычного ответа вызови функцию endTalk с полем text — твоё короткое прощальное сообщение. В остальных случаях НЕ вызывай функцию.');
       const systemText = systemParts.join('\n');
 
       const contents: any[] = [];
@@ -166,15 +191,15 @@ export async function POST(request: NextRequest) {
         contents.unshift(piece);
         total += len;
       }
-  contents.push({ role: 'user', parts: [{ text }] });
+      contents.push({ role: 'user', parts: [{ text }] });
 
       // сохраняем входящее сообщение пользователя
-  await (prisma as any).message.create({ data: { chatId: effectiveChatId, role: 'USER', content: text } });
+      await (prisma as any).message.create({ data: { chatId: effectiveChatId, role: 'USER', content: text } });
 
       geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ contents, generationConfig: { temperature } })
+        body: JSON.stringify({ contents, generationConfig: { temperature }, tools })
       });
     }
 
@@ -187,14 +212,35 @@ export async function POST(request: NextRequest) {
     }
 
     const geminiData = await geminiResponse.json();
-    const responseText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || 'Нет ответа';
+    const parts = geminiData?.candidates?.[0]?.content?.parts || [];
+    // Извлекаем текстовый ответ (если есть)
+    let responseText: string = 'Нет ответа';
+    for (const p of parts) {
+      if (typeof p?.text === 'string' && p.text.trim()) { responseText = p.text; break; }
+    }
+
+    // Признак завершения разговора: либо модель вызвала функцию endTalk, либо сработала эвристика
+    let endtalk = initialEndtalk;
+    const fcPart = parts.find((p: any) => p && p.functionCall);
+    if (fcPart?.functionCall?.name === 'endTalk') {
+      endtalk = true;
+      // Пытаемся извлечь финальный текст из аргументов функции
+      const args: any = fcPart.functionCall.args;
+      let endText = '';
+      if (args && typeof args === 'object') {
+        endText = args.text || '';
+      } else if (typeof args === 'string') {
+        try { const parsed = JSON.parse(args); endText = parsed?.text || ''; } catch {}
+      }
+      if (endText) responseText = endText;
+    }
 
     // если чатовый режим — сохраняем ответ ассистента
     if (effectiveChatId) {
       await (prisma as any).message.create({ data: { chatId: effectiveChatId, role: 'ASSISTANT', content: responseText } });
       await (prisma as any).chat.update({ where: { id: effectiveChatId }, data: { updatedAt: new Date() } });
     }
-    return NextResponse.json({ text: responseText, chatId: effectiveChatId }, { status: 200 });
+    return NextResponse.json({ text: responseText, chatId: effectiveChatId, endtalk }, { status: 200 });
 
   } catch (error) {
     console.error('Ошибка webhook:', error);

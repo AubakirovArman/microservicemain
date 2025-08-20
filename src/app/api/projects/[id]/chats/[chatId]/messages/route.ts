@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+// removed: import { detectEndOfConversation } from '@/lib/chat-utils';
 
 // Helper to trim history based on token/length budget and keep summary
 function buildContext(messages: Array<{ role: string; content: string }>, style?: string, promptInstructions?: string) {
@@ -10,6 +11,8 @@ function buildContext(messages: Array<{ role: string; content: string }>, style?
   const systemParts: string[] = [];
   if (promptInstructions) systemParts.push(`Инструкции промпта: ${promptInstructions}`);
   if (style) systemParts.push(`Стиль общения ассистента: ${style}. Говори в этом стиле во всех ответах.`);
+  // Добавляем инструкцию по вызову функции завершения
+  systemParts.push('Если пользователь завершает разговор либо прошается с тобой , вместо обычного ответа вызови функцию endTalk с полем text — твоё короткое прощальное сообщение. В остальных случаях НЕ вызывай функцию.');
   const systemText = systemParts.join('\n');
 
   const reversed = [...messages].reverse();
@@ -95,10 +98,29 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
   contents.push({ role: 'user', parts: [{ text }] });
 
+  // Tool declaration for function calling
+  const tools = [
+    {
+      functionDeclarations: [
+        {
+          name: 'endTalk',
+          description: 'Вызови эту функцию, когда разговор завершается (пользователь прощается/говорит, что это всё либо пока либо ой все и т п ). Передай короткое финальное сообщение в поле text.',
+          parameters: {
+            type: 'OBJECT',
+            properties: {
+              text: { type: 'STRING', description: 'Короткое финальное прощальное сообщение пользователю.' }
+            },
+            required: ['text']
+          }
+        }
+      ]
+    }
+  ] as any;
+
   const geminiResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents, generationConfig: { temperature } })
+    body: JSON.stringify({ contents, generationConfig: { temperature }, tools })
   });
   if (!geminiResp.ok) {
     const err = await geminiResp.text();
@@ -106,7 +128,26 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: 'Ошибка при вызове Gemini API' }, { status: 500 });
   }
   const data = await geminiResp.json();
-  const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Нет ответа';
+  const parts = data.candidates?.[0]?.content?.parts || [];
+  let responseText: string = 'Нет ответа';
+  for (const p of parts) {
+    if (typeof p?.text === 'string' && p.text.trim()) { responseText = p.text; break; }
+  }
+
+  // Detect end via function call only
+  let endtalk = false;
+  const fcPart = parts.find((p: any) => p && p.functionCall);
+  if (fcPart?.functionCall?.name === 'endTalk') {
+    endtalk = true;
+    const args: any = fcPart.functionCall.args;
+    let endText = '';
+    if (args && typeof args === 'object') {
+      endText = args.text || '';
+    } else if (typeof args === 'string') {
+      try { const parsed = JSON.parse(args); endText = parsed?.text || ''; } catch {}
+    }
+    if (endText) responseText = endText;
+  }
 
   // Save assistant message
   await (prisma as any).message.create({ data: { chatId, role: 'ASSISTANT', content: responseText } });
@@ -114,7 +155,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   // Touch chat updatedAt
   await (prisma as any).chat.update({ where: { id: chatId }, data: { updatedAt: new Date() } });
 
-  return NextResponse.json({ text: responseText });
+  return NextResponse.json({ text: responseText, chatId, endtalk });
 }
 
 // GET: история сообщений (ограниченная)
