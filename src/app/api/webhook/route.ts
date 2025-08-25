@@ -239,6 +239,14 @@ export async function POST(request: NextRequest) {
     if (effectiveChatId) {
       await (prisma as any).message.create({ data: { chatId: effectiveChatId, role: 'ASSISTANT', content: responseText } });
       await (prisma as any).chat.update({ where: { id: effectiveChatId }, data: { updatedAt: new Date() } });
+      if (endtalk) {
+        try {
+          await (prisma as any).message.deleteMany({ where: { chatId: effectiveChatId } });
+          await (prisma as any).chat.update({ where: { id: effectiveChatId }, data: { summary: null } });
+        } catch (cleanErr) {
+          console.error('Ошибка очистки контекста (webhook):', cleanErr);
+        }
+      }
     }
     return NextResponse.json({ text: responseText, chatId: effectiveChatId, endtalk }, { status: 200 });
 

@@ -156,6 +156,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   // Touch chat updatedAt
   await (prisma as any).chat.update({ where: { id: chatId }, data: { updatedAt: new Date() } });
 
+  // Если разговор завершён — очищаем контекст (все сообщения и summary)
+  if (endtalk) {
+    try {
+      await (prisma as any).message.deleteMany({ where: { chatId } });
+      await (prisma as any).chat.update({ where: { id: chatId }, data: { summary: null } });
+    } catch (cleanErr) {
+      console.error('Ошибка очистки контекста чата:', cleanErr);
+    }
+  }
+
   return NextResponse.json({ text: responseText, chatId, endtalk });
 }
 
