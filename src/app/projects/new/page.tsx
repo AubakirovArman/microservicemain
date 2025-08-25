@@ -106,7 +106,7 @@ export default function NewProject() {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 placeholder="Введите название проекта"
               />
             </div>
@@ -122,7 +122,7 @@ export default function NewProject() {
                 value={formData.geminiApiKey}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 placeholder="Введите ваш API ключ Gemini"
               />
               <p className="text-sm text-gray-500 mt-1">
@@ -147,7 +147,7 @@ export default function NewProject() {
                 name="type"
                 value={formData.type}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
               >
                 <option value="SINGLE">Обычный (без истории)</option>
                 <option value="CHAT">Чат (с историей)</option>
@@ -163,7 +163,7 @@ export default function NewProject() {
                 name="geminiModel"
                 value={formData.geminiModel}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
               >
                 {geminiModels.map((model) => (
                   <option key={model.value} value={model.value}>

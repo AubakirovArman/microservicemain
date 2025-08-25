@@ -149,6 +149,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (endText) responseText = endText;
   }
 
+
   // Save assistant message
   await (prisma as any).message.create({ data: { chatId, role: 'ASSISTANT', content: responseText } });
 

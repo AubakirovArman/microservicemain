@@ -1,0 +1,203 @@
+
+> microservicemain@0.1.0 dev
+> next dev --turbopack
+
+ ⚠ Warning: Found multiple lockfiles. Selecting /home/armanibadboy/package-lock.json.
+   Consider removing the lockfiles at:
+   * /home/armanibadboy/2/microservicemain/package-lock.json
+
+ ⚠ Port 3000 is in use by an unknown process, using available port 3001 instead.
+   ▲ Next.js 15.4.4 (Turbopack)
+   - Local:        http://localhost:3001
+   - Network:      http://10.162.0.2:3001
+   - Environments: .env.local, .env
+
+ ✓ Starting...
+ ○ Compiling middleware ...
+ ✓ Compiled middleware in 518ms
+ ✓ Ready in 1680ms
+ ○ Compiling /projects/[id]/prompts/[promptId]/edit ...
+ ✓ Compiled /projects/[id]/prompts/[promptId]/edit in 3.4s
+ GET /projects/cmep3g54t0003bo7oc5q2113a/prompts/cmep3hj6b0005bo7ob0xjvu37/edit 200 in 4220ms
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /api/auth/[...nextauth] in 839ms
+ POST /api/auth/_log 200 in 973ms
+ GET /api/auth/session 200 in 86ms
+ ○ Compiling /favicon.ico ...
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 644ms
+ ⚠ Blocked cross-origin request from 34.152.4.79 to /_next/* resource. To allow this, configure "allowedDevOrigins" in next.config
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 251ms
+ ✓ Compiled /favicon.ico in 1833ms
+Начинаем инициализацию кэша...
+Начинаем инициализацию кэша...
+prisma:query SELECT "public"."Project"."id", "public"."Project"."name", "public"."Project"."geminiApiKey", "public"."Project"."geminiModel", "public"."Project"."temperature", "public"."Project"."type"::text, "public"."Project"."userId", "public"."Project"."createdAt", "public"."Project"."updatedAt" FROM "public"."Project" WHERE 1=1 OFFSET $1
+prisma:query SELECT "public"."Prompt"."id", "public"."Prompt"."name", "public"."Prompt"."instruction", "public"."Prompt"."projectId", "public"."Prompt"."createdAt", "public"."Prompt"."updatedAt" FROM "public"."Prompt" WHERE "public"."Prompt"."projectId" IN ($1,$2) OFFSET $3
+Найдено 2 проектов для кэширования
+Кэш успешно инициализирован
+Кэшировано проектов: 2
+Кэшировано промптов: 6
+ POST /api/cache/init 200 in 1253ms
+prisma:query SELECT "public"."Project"."id", "public"."Project"."name", "public"."Project"."geminiApiKey", "public"."Project"."geminiModel", "public"."Project"."temperature", "public"."Project"."type"::text, "public"."Project"."userId", "public"."Project"."createdAt", "public"."Project"."updatedAt" FROM "public"."Project" WHERE 1=1 OFFSET $1
+prisma:query SELECT "public"."Prompt"."id", "public"."Prompt"."name", "public"."Prompt"."instruction", "public"."Prompt"."projectId", "public"."Prompt"."createdAt", "public"."Prompt"."updatedAt" FROM "public"."Prompt" WHERE "public"."Prompt"."projectId" IN ($1,$2) OFFSET $3
+Найдено 2 проектов для кэширования
+Кэш успешно инициализирован
+Кэшировано проектов: 2
+Кэшировано промптов: 6
+ POST /api/cache/init 200 in 1785ms
+prisma:query SELECT "public"."Project"."id", "public"."Project"."name", "public"."Project"."geminiApiKey", "public"."Project"."geminiModel", "public"."Project"."temperature", "public"."Project"."type"::text, "public"."Project"."userId", "public"."Project"."createdAt", "public"."Project"."updatedAt" FROM "public"."Project" WHERE ("public"."Project"."id" = $1 AND "public"."Project"."userId" = $2) LIMIT $3 OFFSET $4
+prisma:query SELECT "public"."Prompt"."id", "public"."Prompt"."name", "public"."Prompt"."instruction", "public"."Prompt"."projectId", "public"."Prompt"."createdAt", "public"."Prompt"."updatedAt" FROM "public"."Prompt" WHERE "public"."Prompt"."projectId" IN ($1) ORDER BY "public"."Prompt"."createdAt" DESC OFFSET $2
+ GET /api/projects/cmep3g54t0003bo7oc5q2113a 200 in 2455ms
+ GET /api/auth/session 200 in 63ms
+ ○ Compiling /api/prompts/generate ...
+ ✓ Compiled /api/prompts/generate in 785ms
+[PROMPT-GEN][INPUT] { projectId: 'cmep3g54t0003bo7oc5q2113a', currentPromptLength: 972 }
+[PROMPT-GEN][START] {
+  projectId: 'cmep3g54t0003bo7oc5q2113a',
+  userId: 'cmep2rojj0000bo7o0j6u5qwl'
+}
+prisma:query SELECT 1
+prisma:query SELECT "public"."Project"."id", "public"."Project"."geminiApiKey" FROM "public"."Project" WHERE ("public"."Project"."id" = $1 AND "public"."Project"."userId" = $2) LIMIT $3 OFFSET $4
+[PROMPT-GEN][PROGRESS] { len: 5009 }
+[PROMPT-GEN][DONE] {
+  projectId: 'cmep3g54t0003bo7oc5q2113a',
+  durationMs: 10467,
+  outputLength: 8129
+}
+ POST /api/prompts/generate 200 in 11112ms
+ GET /api/auth/session 200 in 60ms
+ ✓ Compiled /api/projects/[id]/prompts/[promptId] in 282ms
+prisma:query SELECT 1
+prisma:query SELECT "public"."Project"."id", "public"."Project"."name", "public"."Project"."geminiApiKey", "public"."Project"."geminiModel", "public"."Project"."temperature", "public"."Project"."type"::text, "public"."Project"."userId", "public"."Project"."createdAt", "public"."Project"."updatedAt" FROM "public"."Project" WHERE ("public"."Project"."id" = $1 AND "public"."Project"."userId" = $2) LIMIT $3 OFFSET $4
+prisma:query SELECT "public"."Prompt"."id", "public"."Prompt"."name", "public"."Prompt"."instruction", "public"."Prompt"."projectId", "public"."Prompt"."createdAt", "public"."Prompt"."updatedAt" FROM "public"."Prompt" WHERE ("public"."Prompt"."id" = $1 AND "public"."Prompt"."projectId" = $2) LIMIT $3 OFFSET $4
+prisma:query UPDATE "public"."Prompt" SET "name" = $1, "instruction" = $2, "updatedAt" = $3 WHERE ("public"."Prompt"."id" = $4 AND 1=1) RETURNING "public"."Prompt"."id", "public"."Prompt"."name", "public"."Prompt"."instruction", "public"."Prompt"."projectId", "public"."Prompt"."createdAt", "public"."Prompt"."updatedAt"
+Промпт SteppeLogic обновлен и кэширован
+ PUT /api/projects/cmep3g54t0003bo7oc5q2113a/prompts/cmep3hj6b0005bo7ob0xjvu37 200 in 963ms
+ ○ Compiling /projects/[id] ...
+ ✓ Compiled /projects/[id] in 728ms
+ GET /projects/cmep3g54t0003bo7oc5q2113a 200 in 1259ms
+prisma:query SELECT "public"."Project"."id", "public"."Project"."name", "public"."Project"."geminiApiKey", "public"."Project"."geminiModel", "public"."Project"."temperature", "public"."Project"."type"::text, "public"."Project"."userId", "public"."Project"."createdAt", "public"."Project"."updatedAt" FROM "public"."Project" WHERE ("public"."Project"."id" = $1 AND "public"."Project"."userId" = $2) LIMIT $3 OFFSET $4
+prisma:query SELECT "public"."Prompt"."id", "public"."Prompt"."name", "public"."Prompt"."instruction", "public"."Prompt"."projectId", "public"."Prompt"."createdAt", "public"."Prompt"."updatedAt" FROM "public"."Prompt" WHERE "public"."Prompt"."projectId" IN ($1) ORDER BY "public"."Prompt"."createdAt" DESC OFFSET $2
+ GET /api/projects/cmep3g54t0003bo7oc5q2113a 200 in 61ms
+prisma:query SELECT "public"."Project"."id", "public"."Project"."name", "public"."Project"."geminiApiKey", "public"."Project"."geminiModel", "public"."Project"."temperature", "public"."Project"."type"::text, "public"."Project"."userId", "public"."Project"."createdAt", "public"."Project"."updatedAt" FROM "public"."Project" WHERE ("public"."Project"."id" = $1 AND "public"."Project"."userId" = $2) LIMIT $3 OFFSET $4
+prisma:query SELECT "public"."Prompt"."id", "public"."Prompt"."name", "public"."Prompt"."instruction", "public"."Prompt"."projectId", "public"."Prompt"."createdAt", "public"."Prompt"."updatedAt" FROM "public"."Prompt" WHERE "public"."Prompt"."projectId" IN ($1) ORDER BY "public"."Prompt"."createdAt" DESC OFFSET $2
+ GET /api/projects/cmep3g54t0003bo7oc5q2113a 200 in 35ms
+ GET /api/auth/session 200 in 60ms
+prisma:query SELECT "public"."Project"."id", "public"."Project"."name", "public"."Project"."geminiApiKey", "public"."Project"."geminiModel", "public"."Project"."temperature", "public"."Project"."type"::text, "public"."Project"."userId", "public"."Project"."createdAt", "public"."Project"."updatedAt" FROM "public"."Project" WHERE ("public"."Project"."id" = $1 AND "public"."Project"."userId" = $2) LIMIT $3 OFFSET $4
+prisma:query SELECT "public"."Prompt"."id", "public"."Prompt"."name", "public"."Prompt"."instruction", "public"."Prompt"."projectId", "public"."Prompt"."createdAt", "public"."Prompt"."updatedAt" FROM "public"."Prompt" WHERE "public"."Prompt"."projectId" IN ($1) ORDER BY "public"."Prompt"."createdAt" DESC OFFSET $2
+ GET /api/projects/cmep3g54t0003bo7oc5q2113a 200 in 78ms
+ ✓ Compiled /test-webhook in 403ms
+ GET /test-webhook 200 in 489ms
+ GET /api/auth/session 200 in 62ms
+prisma:query SELECT "public"."Project"."id", "public"."Project"."name", "public"."Project"."geminiApiKey", "public"."Project"."geminiModel", "public"."Project"."temperature", "public"."Project"."type"::text, "public"."Project"."userId", "public"."Project"."createdAt", "public"."Project"."updatedAt" FROM "public"."Project" WHERE ("public"."Project"."id" = $1 AND "public"."Project"."userId" = $2) LIMIT $3 OFFSET $4
+ GET /api/projects/cmep3g54t0003bo7oc5q2113a 200 in 73ms
+prisma:query SELECT "public"."Prompt"."id", "public"."Prompt"."name", "public"."Prompt"."instruction", "public"."Prompt"."projectId", "public"."Prompt"."createdAt", "public"."Prompt"."updatedAt" FROM "public"."Prompt" WHERE "public"."Prompt"."projectId" IN ($1) ORDER BY "public"."Prompt"."createdAt" DESC OFFSET $2
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 234ms
+ GET /api/auth/session 200 in 76ms
+Начинаем инициализацию кэша...
+prisma:query SELECT "public"."Project"."id", "public"."Project"."name", "public"."Project"."geminiApiKey", "public"."Project"."geminiModel", "public"."Project"."temperature", "public"."Project"."type"::text, "public"."Project"."userId", "public"."Project"."createdAt", "public"."Project"."updatedAt" FROM "public"."Project" WHERE 1=1 OFFSET $1
+prisma:query SELECT "public"."Prompt"."id", "public"."Prompt"."name", "public"."Prompt"."instruction", "public"."Prompt"."projectId", "public"."Prompt"."createdAt", "public"."Prompt"."updatedAt" FROM "public"."Prompt" WHERE "public"."Prompt"."projectId" IN ($1,$2) OFFSET $3
+Найдено 2 проектов для кэширования
+Кэш успешно инициализирован
+Кэшировано проектов: 2
+Кэшировано промптов: 6
+ POST /api/cache/init 200 in 38ms
+ GET /api/auth/session 200 in 32ms
+prisma:query SELECT "public"."Project"."id", "public"."Project"."name", "public"."Project"."geminiApiKey", "public"."Project"."geminiModel", "public"."Project"."temperature", "public"."Project"."type"::text, "public"."Project"."userId", "public"."Project"."createdAt", "public"."Project"."updatedAt" FROM "public"."Project" WHERE ("public"."Project"."id" = $1 AND "public"."Project"."userId" = $2) LIMIT $3 OFFSET $4
+prisma:query SELECT "public"."Prompt"."id", "public"."Prompt"."name", "public"."Prompt"."instruction", "public"."Prompt"."projectId", "public"."Prompt"."createdAt", "public"."Prompt"."updatedAt" FROM "public"."Prompt" WHERE "public"."Prompt"."projectId" IN ($1) ORDER BY "public"."Prompt"."createdAt" DESC OFFSET $2
+ GET /api/projects/cmep3g54t0003bo7oc5q2113a 200 in 65ms
+Начинаем инициализацию кэша...
+prisma:query SELECT "public"."Project"."id", "public"."Project"."name", "public"."Project"."geminiApiKey", "public"."Project"."geminiModel", "public"."Project"."temperature", "public"."Project"."type"::text, "public"."Project"."userId", "public"."Project"."createdAt", "public"."Project"."updatedAt" FROM "public"."Project" WHERE 1=1 OFFSET $1
+prisma:query SELECT "public"."Prompt"."id", "public"."Prompt"."name", "public"."Prompt"."instruction", "public"."Prompt"."projectId", "public"."Prompt"."createdAt", "public"."Prompt"."updatedAt" FROM "public"."Prompt" WHERE "public"."Prompt"."projectId" IN ($1,$2) OFFSET $3
+Найдено 2 проектов для кэширования
+Кэш успешно инициализирован
+Кэшировано проектов: 2
+Кэшировано промптов: 6
+ POST /api/cache/init 200 in 38ms
+Начинаем инициализацию кэша...
+prisma:query SELECT 1
+prisma:query SELECT "public"."Project"."id", "public"."Project"."name", "public"."Project"."geminiApiKey", "public"."Project"."geminiModel", "public"."Project"."temperature", "public"."Project"."type"::text, "public"."Project"."userId", "public"."Project"."createdAt", "public"."Project"."updatedAt" FROM "public"."Project" WHERE 1=1 OFFSET $1
+prisma:query SELECT "public"."Prompt"."id", "public"."Prompt"."name", "public"."Prompt"."instruction", "public"."Prompt"."projectId", "public"."Prompt"."createdAt", "public"."Prompt"."updatedAt" FROM "public"."Prompt" WHERE "public"."Prompt"."projectId" IN ($1,$2) OFFSET $3
+Найдено 2 проектов для кэширования
+Кэш успешно инициализирован
+Кэшировано проектов: 2
+Кэшировано промптов: 6
+ POST /api/cache/init 200 in 33ms
+Начинаем инициализацию кэша...
+prisma:query SELECT "public"."Project"."id", "public"."Project"."name", "public"."Project"."geminiApiKey", "public"."Project"."geminiModel", "public"."Project"."temperature", "public"."Project"."type"::text, "public"."Project"."userId", "public"."Project"."createdAt", "public"."Project"."updatedAt" FROM "public"."Project" WHERE 1=1 OFFSET $1
+prisma:query SELECT "public"."Prompt"."id", "public"."Prompt"."name", "public"."Prompt"."instruction", "public"."Prompt"."projectId", "public"."Prompt"."createdAt", "public"."Prompt"."updatedAt" FROM "public"."Prompt" WHERE "public"."Prompt"."projectId" IN ($1,$2) OFFSET $3
+Найдено 2 проектов для кэширования
+Кэш успешно инициализирован
+Кэшировано проектов: 2
+Кэшировано промптов: 6
+ POST /api/cache/init 200 in 28ms
+Начинаем инициализацию кэша...
+prisma:query SELECT "public"."Project"."id", "public"."Project"."name", "public"."Project"."geminiApiKey", "public"."Project"."geminiModel", "public"."Project"."temperature", "public"."Project"."type"::text, "public"."Project"."userId", "public"."Project"."createdAt", "public"."Project"."updatedAt" FROM "public"."Project" WHERE 1=1 OFFSET $1
+prisma:query SELECT "public"."Prompt"."id", "public"."Prompt"."name", "public"."Prompt"."instruction", "public"."Prompt"."projectId", "public"."Prompt"."createdAt", "public"."Prompt"."updatedAt" FROM "public"."Prompt" WHERE "public"."Prompt"."projectId" IN ($1,$2) OFFSET $3
+Найдено 2 проектов для кэширования
+Кэш успешно инициализирован
+Кэшировано проектов: 2
+Кэшировано промптов: 6
+ POST /api/cache/init 200 in 28ms
+Начинаем инициализацию кэша...
+prisma:query SELECT "public"."Project"."id", "public"."Project"."name", "public"."Project"."geminiApiKey", "public"."Project"."geminiModel", "public"."Project"."temperature", "public"."Project"."type"::text, "public"."Project"."userId", "public"."Project"."createdAt", "public"."Project"."updatedAt" FROM "public"."Project" WHERE 1=1 OFFSET $1
+prisma:query SELECT "public"."Prompt"."id", "public"."Prompt"."name", "public"."Prompt"."instruction", "public"."Prompt"."projectId", "public"."Prompt"."createdAt", "public"."Prompt"."updatedAt" FROM "public"."Prompt" WHERE "public"."Prompt"."projectId" IN ($1,$2) OFFSET $3
+Найдено 2 проектов для кэширования
+Кэш успешно инициализирован
+Кэшировано проектов: 2
+Кэшировано промптов: 6
+ POST /api/cache/init 200 in 28ms
+Начинаем инициализацию кэша...
+prisma:query SELECT "public"."Project"."id", "public"."Project"."name", "public"."Project"."geminiApiKey", "public"."Project"."geminiModel", "public"."Project"."temperature", "public"."Project"."type"::text, "public"."Project"."userId", "public"."Project"."createdAt", "public"."Project"."updatedAt" FROM "public"."Project" WHERE 1=1 OFFSET $1
+prisma:query SELECT "public"."Prompt"."id", "public"."Prompt"."name", "public"."Prompt"."instruction", "public"."Prompt"."projectId", "public"."Prompt"."createdAt", "public"."Prompt"."updatedAt" FROM "public"."Prompt" WHERE "public"."Prompt"."projectId" IN ($1,$2) OFFSET $3
+Найдено 2 проектов для кэширования
+Кэш успешно инициализирован
+Кэшировано проектов: 2
+Кэшировано промптов: 6
+ POST /api/cache/init 200 in 29ms
+ GET /api/auth/session 200 in 61ms
+ GET /api/auth/session 200 in 27ms
+prisma:query SELECT "public"."Project"."id", "public"."Project"."name", "public"."Project"."geminiApiKey", "public"."Project"."geminiModel", "public"."Project"."temperature", "public"."Project"."type"::text, "public"."Project"."userId", "public"."Project"."createdAt", "public"."Project"."updatedAt" FROM "public"."Project" WHERE ("public"."Project"."id" = $1 AND "public"."Project"."userId" = $2) LIMIT $3 OFFSET $4
+prisma:query SELECT "public"."Prompt"."id", "public"."Prompt"."name", "public"."Prompt"."instruction", "public"."Prompt"."projectId", "public"."Prompt"."createdAt", "public"."Prompt"."updatedAt" FROM "public"."Prompt" WHERE "public"."Prompt"."projectId" IN ($1) ORDER BY "public"."Prompt"."createdAt" DESC OFFSET $2
+ GET /api/projects/cmep3g54t0003bo7oc5q2113a 200 in 56ms
+ ✓ Compiled /api/webhook in 255ms
+prisma:query SELECT "public"."Chat"."id", "public"."Chat"."name", "public"."Chat"."style", "public"."Chat"."summary", "public"."Chat"."lastClearedAt", "public"."Chat"."externalKey", "public"."Chat"."projectId", "public"."Chat"."createdAt", "public"."Chat"."updatedAt" FROM "public"."Chat" WHERE ("public"."Chat"."id" = $1 AND "public"."Chat"."projectId" = $2) LIMIT $3 OFFSET $4
+prisma:query SELECT "public"."Chat"."id", "public"."Chat"."name", "public"."Chat"."style", "public"."Chat"."summary", "public"."Chat"."lastClearedAt", "public"."Chat"."externalKey", "public"."Chat"."projectId", "public"."Chat"."createdAt", "public"."Chat"."updatedAt" FROM "public"."Chat" WHERE ("public"."Chat"."projectId" = $1 AND "public"."Chat"."externalKey" = $2) LIMIT $3 OFFSET $4
+prisma:query SELECT "public"."Chat"."id", "public"."Chat"."name", "public"."Chat"."style", "public"."Chat"."summary", "public"."Chat"."lastClearedAt", "public"."Chat"."externalKey", "public"."Chat"."projectId", "public"."Chat"."createdAt", "public"."Chat"."updatedAt" FROM "public"."Chat" WHERE ("public"."Chat"."id" = $1 AND "public"."Chat"."projectId" = $2) LIMIT $3 OFFSET $4
+prisma:query SELECT "public"."Message"."id", "public"."Message"."chatId", "public"."Message"."role"::text, "public"."Message"."content", "public"."Message"."createdAt" FROM "public"."Message" WHERE "public"."Message"."chatId" = $1 ORDER BY "public"."Message"."createdAt" ASC LIMIT $2 OFFSET $3
+prisma:query INSERT INTO "public"."Message" ("id","chatId","role","content","createdAt") VALUES ($1,$2,CAST($3::text AS "public"."MessageRole"),$4,$5) RETURNING "public"."Message"."id", "public"."Message"."chatId", "public"."Message"."role"::text, "public"."Message"."content", "public"."Message"."createdAt"
+prisma:query INSERT INTO "public"."Message" ("id","chatId","role","content","createdAt") VALUES ($1,$2,CAST($3::text AS "public"."MessageRole"),$4,$5) RETURNING "public"."Message"."id", "public"."Message"."chatId", "public"."Message"."role"::text, "public"."Message"."content", "public"."Message"."createdAt"
+prisma:query UPDATE "public"."Chat" SET "updatedAt" = $1 WHERE ("public"."Chat"."id" = $2 AND 1=1) RETURNING "public"."Chat"."id", "public"."Chat"."name", "public"."Chat"."style", "public"."Chat"."summary", "public"."Chat"."lastClearedAt", "public"."Chat"."externalKey", "public"."Chat"."projectId", "public"."Chat"."createdAt", "public"."Chat"."updatedAt"
+ POST /api/webhook 200 in 1157ms
+prisma:query SELECT 1
+prisma:query SELECT "public"."Chat"."id", "public"."Chat"."name", "public"."Chat"."style", "public"."Chat"."summary", "public"."Chat"."lastClearedAt", "public"."Chat"."externalKey", "public"."Chat"."projectId", "public"."Chat"."createdAt", "public"."Chat"."updatedAt" FROM "public"."Chat" WHERE ("public"."Chat"."id" = $1 AND "public"."Chat"."projectId" = $2) LIMIT $3 OFFSET $4
+prisma:query SELECT "public"."Chat"."id", "public"."Chat"."name", "public"."Chat"."style", "public"."Chat"."summary", "public"."Chat"."lastClearedAt", "public"."Chat"."externalKey", "public"."Chat"."projectId", "public"."Chat"."createdAt", "public"."Chat"."updatedAt" FROM "public"."Chat" WHERE ("public"."Chat"."projectId" = $1 AND "public"."Chat"."externalKey" = $2) LIMIT $3 OFFSET $4
+prisma:query SELECT "public"."Chat"."id", "public"."Chat"."name", "public"."Chat"."style", "public"."Chat"."summary", "public"."Chat"."lastClearedAt", "public"."Chat"."externalKey", "public"."Chat"."projectId", "public"."Chat"."createdAt", "public"."Chat"."updatedAt" FROM "public"."Chat" WHERE ("public"."Chat"."id" = $1 AND "public"."Chat"."projectId" = $2) LIMIT $3 OFFSET $4
+prisma:query SELECT "public"."Message"."id", "public"."Message"."chatId", "public"."Message"."role"::text, "public"."Message"."content", "public"."Message"."createdAt" FROM "public"."Message" WHERE "public"."Message"."chatId" = $1 ORDER BY "public"."Message"."createdAt" ASC LIMIT $2 OFFSET $3
+prisma:query INSERT INTO "public"."Message" ("id","chatId","role","content","createdAt") VALUES ($1,$2,CAST($3::text AS "public"."MessageRole"),$4,$5) RETURNING "public"."Message"."id", "public"."Message"."chatId", "public"."Message"."role"::text, "public"."Message"."content", "public"."Message"."createdAt"
+prisma:query INSERT INTO "public"."Message" ("id","chatId","role","content","createdAt") VALUES ($1,$2,CAST($3::text AS "public"."MessageRole"),$4,$5) RETURNING "public"."Message"."id", "public"."Message"."chatId", "public"."Message"."role"::text, "public"."Message"."content", "public"."Message"."createdAt"
+prisma:query UPDATE "public"."Chat" SET "updatedAt" = $1 WHERE ("public"."Chat"."id" = $2 AND 1=1) RETURNING "public"."Chat"."id", "public"."Chat"."name", "public"."Chat"."style", "public"."Chat"."summary", "public"."Chat"."lastClearedAt", "public"."Chat"."externalKey", "public"."Chat"."projectId", "public"."Chat"."createdAt", "public"."Chat"."updatedAt"
+ POST /api/webhook 200 in 1573ms
+prisma:query SELECT 1
+prisma:query SELECT "public"."Chat"."id", "public"."Chat"."name", "public"."Chat"."style", "public"."Chat"."summary", "public"."Chat"."lastClearedAt", "public"."Chat"."externalKey", "public"."Chat"."projectId", "public"."Chat"."createdAt", "public"."Chat"."updatedAt" FROM "public"."Chat" WHERE ("public"."Chat"."id" = $1 AND "public"."Chat"."projectId" = $2) LIMIT $3 OFFSET $4
+prisma:query SELECT "public"."Chat"."id", "public"."Chat"."name", "public"."Chat"."style", "public"."Chat"."summary", "public"."Chat"."lastClearedAt", "public"."Chat"."externalKey", "public"."Chat"."projectId", "public"."Chat"."createdAt", "public"."Chat"."updatedAt" FROM "public"."Chat" WHERE ("public"."Chat"."projectId" = $1 AND "public"."Chat"."externalKey" = $2) LIMIT $3 OFFSET $4
+prisma:query SELECT "public"."Chat"."id", "public"."Chat"."name", "public"."Chat"."style", "public"."Chat"."summary", "public"."Chat"."lastClearedAt", "public"."Chat"."externalKey", "public"."Chat"."projectId", "public"."Chat"."createdAt", "public"."Chat"."updatedAt" FROM "public"."Chat" WHERE ("public"."Chat"."id" = $1 AND "public"."Chat"."projectId" = $2) LIMIT $3 OFFSET $4
+prisma:query SELECT "public"."Message"."id", "public"."Message"."chatId", "public"."Message"."role"::text, "public"."Message"."content", "public"."Message"."createdAt" FROM "public"."Message" WHERE "public"."Message"."chatId" = $1 ORDER BY "public"."Message"."createdAt" ASC LIMIT $2 OFFSET $3
+prisma:query INSERT INTO "public"."Message" ("id","chatId","role","content","createdAt") VALUES ($1,$2,CAST($3::text AS "public"."MessageRole"),$4,$5) RETURNING "public"."Message"."id", "public"."Message"."chatId", "public"."Message"."role"::text, "public"."Message"."content", "public"."Message"."createdAt"
+prisma:query INSERT INTO "public"."Message" ("id","chatId","role","content","createdAt") VALUES ($1,$2,CAST($3::text AS "public"."MessageRole"),$4,$5) RETURNING "public"."Message"."id", "public"."Message"."chatId", "public"."Message"."role"::text, "public"."Message"."content", "public"."Message"."createdAt"
+prisma:query UPDATE "public"."Chat" SET "updatedAt" = $1 WHERE ("public"."Chat"."id" = $2 AND 1=1) RETURNING "public"."Chat"."id", "public"."Chat"."name", "public"."Chat"."style", "public"."Chat"."summary", "public"."Chat"."lastClearedAt", "public"."Chat"."externalKey", "public"."Chat"."projectId", "public"."Chat"."createdAt", "public"."Chat"."updatedAt"
+ POST /api/webhook 200 in 1482ms
+prisma:query SELECT 1
+prisma:query SELECT "public"."Chat"."id", "public"."Chat"."name", "public"."Chat"."style", "public"."Chat"."summary", "public"."Chat"."lastClearedAt", "public"."Chat"."externalKey", "public"."Chat"."projectId", "public"."Chat"."createdAt", "public"."Chat"."updatedAt" FROM "public"."Chat" WHERE ("public"."Chat"."id" = $1 AND "public"."Chat"."projectId" = $2) LIMIT $3 OFFSET $4
+prisma:query SELECT "public"."Chat"."id", "public"."Chat"."name", "public"."Chat"."style", "public"."Chat"."summary", "public"."Chat"."lastClearedAt", "public"."Chat"."externalKey", "public"."Chat"."projectId", "public"."Chat"."createdAt", "public"."Chat"."updatedAt" FROM "public"."Chat" WHERE ("public"."Chat"."projectId" = $1 AND "public"."Chat"."externalKey" = $2) LIMIT $3 OFFSET $4
+prisma:query SELECT "public"."Chat"."id", "public"."Chat"."name", "public"."Chat"."style", "public"."Chat"."summary", "public"."Chat"."lastClearedAt", "public"."Chat"."externalKey", "public"."Chat"."projectId", "public"."Chat"."createdAt", "public"."Chat"."updatedAt" FROM "public"."Chat" WHERE ("public"."Chat"."id" = $1 AND "public"."Chat"."projectId" = $2) LIMIT $3 OFFSET $4
+prisma:query SELECT "public"."Message"."id", "public"."Message"."chatId", "public"."Message"."role"::text, "public"."Message"."content", "public"."Message"."createdAt" FROM "public"."Message" WHERE "public"."Message"."chatId" = $1 ORDER BY "public"."Message"."createdAt" ASC LIMIT $2 OFFSET $3
+prisma:query INSERT INTO "public"."Message" ("id","chatId","role","content","createdAt") VALUES ($1,$2,CAST($3::text AS "public"."MessageRole"),$4,$5) RETURNING "public"."Message"."id", "public"."Message"."chatId", "public"."Message"."role"::text, "public"."Message"."content", "public"."Message"."createdAt"
+prisma:query INSERT INTO "public"."Message" ("id","chatId","role","content","createdAt") VALUES ($1,$2,CAST($3::text AS "public"."MessageRole"),$4,$5) RETURNING "public"."Message"."id", "public"."Message"."chatId", "public"."Message"."role"::text, "public"."Message"."content", "public"."Message"."createdAt"
+prisma:query UPDATE "public"."Chat" SET "updatedAt" = $1 WHERE ("public"."Chat"."id" = $2 AND 1=1) RETURNING "public"."Chat"."id", "public"."Chat"."name", "public"."Chat"."style", "public"."Chat"."summary", "public"."Chat"."lastClearedAt", "public"."Chat"."externalKey", "public"."Chat"."projectId", "public"."Chat"."createdAt", "public"."Chat"."updatedAt"
+ POST /api/webhook 200 in 1040ms
+ GET /api/auth/session 200 in 54ms
+prisma:query SELECT "public"."Project"."id", "public"."Project"."name", "public"."Project"."geminiApiKey", "public"."Project"."geminiModel", "public"."Project"."temperature", "public"."Project"."type"::text, "public"."Project"."userId", "public"."Project"."createdAt", "public"."Project"."updatedAt" FROM "public"."Project" WHERE ("public"."Project"."id" = $1 AND "public"."Project"."userId" = $2) LIMIT $3 OFFSET $4
+prisma:query SELECT "public"."Prompt"."id", "public"."Prompt"."name", "public"."Prompt"."instruction", "public"."Prompt"."projectId", "public"."Prompt"."createdAt", "public"."Prompt"."updatedAt" FROM "public"."Prompt" WHERE "public"."Prompt"."projectId" IN ($1) ORDER BY "public"."Prompt"."createdAt" DESC OFFSET $2
+ GET /api/projects/cmep3g54t0003bo7oc5q2113a 200 in 70ms
+ GET /api/auth/session 200 in 76ms
